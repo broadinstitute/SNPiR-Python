@@ -1,2 +1,2 @@
-# SNPiR-Python
-Python implementation of the original SNPiR code
+# Py-SNPiR
+This is a Python implementation of the original SNPiR code
