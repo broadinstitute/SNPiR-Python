@@ -56,7 +56,7 @@ def filterindels(outdir, infile, refgenome_path):
     gatk_path = os.path.abspath(gatk4_jar[0])
     gatk_path = gatk_path
     
-    logging.info("Filtering out variants to only include SNP's " + timeStamp() + " \n")
+    logging.info("Filtering out variants to only include SNP's: " + timeStamp() + " \n")
 
 
         # select variants
@@ -69,7 +69,7 @@ def filterindels(outdir, infile, refgenome_path):
                                     "--exclude-filtered",
                                     "-O", output_file])
 
-    print("Running: ", filter_cmd)
+    print("Running: \n", filter_cmd)
     subprocess.Popen(filter_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8', shell=True).communicate()
 
 
@@ -89,7 +89,7 @@ def step_2(outdir, quality_filter, step2_infile):
     #               triploid call 1/1
     ###################################################################
     
-    logging.info("SNPiR - Step 2: Converting VCF to custom SNPiR format & filtering out variants with quality < 20 " + timeStamp() + " \n")
+    logging.info("SNPiR - Step 2: \n\t Converting VCF to custom SNPiR format & filtering out variants with quality < 20: " + timeStamp() + " \n")
     # logging.info(timeStamp())
 
     ##############
@@ -289,7 +289,7 @@ def step3_processing(i, bamFile, TEMP):
 
     return(output, output_failed, removed, not_filtered)
 
-def step_3(outdir, vadir, bamFile):
+def step_3(outdir, bamFile):
     ###################################################################
     # Preform hard filtering based on variant location on the read and base quality score 
     #   1) Filter out the mismatches that occur within the first 6 bases of a read. 
@@ -297,7 +297,7 @@ def step_3(outdir, vadir, bamFile):
     #   2) Filtering variants that are below the minimal base quality score of 25
     ###################################################################
     
-    logging.info("SNPiR - STEP 3: Filtering out mismatches in first 6 bp of reads " + timeStamp() + " \n")
+    logging.info("SNPiR - STEP 3: \n\t Filtering out mismatches in first 6 bp of reads: " + timeStamp() + " \n")
 
     ##############
     # Constants #
@@ -339,7 +339,7 @@ def step_3(outdir, vadir, bamFile):
 ############################################################
       ##############################################
 
-def step_4(outdir, vadir):
+def step_4(outdir, reference_dir):
     ###################################################################
     # Remove sites in repetitive regions based on RepeatMasker annotation
     #    Using BEDtools subtract to compare the variants to the RepeatMasker dataset 
@@ -347,7 +347,7 @@ def step_4(outdir, vadir):
     #    RepeatMasker is provided by UCSC Genome Browser 
     ###################################################################
     
-    logging.info("\n STEP 4: \n Using BEDtools subtract to remove sites in repetitive regions based on RepeatMasker annotation " + timeStamp() + " \n")
+    logging.info("\n STEP 4: \n\t Using BEDtools subtract to remove sites in repetitive regions based on RepeatMasker annotation: " + timeStamp() + " \n")
 
     #############
     # Constants #
@@ -364,7 +364,8 @@ def step_4(outdir, vadir):
     step4_infile = "{}/step3.txt".format(outdir)
     vcf_file = open(step4_infile, "r")
     # repeat masker bed file 
-    bed_path = '{}/tools/SNPiR/genome_ref/hg19_rmsk.bed'.format(vadir)
+    # bed_path = '{}/tools/SNPiR/genome_ref/hg19_rmsk.bed'.format(vadir)
+    bed_path = '{}/hg19_rmsk.bed'.format(reference_dir)
     bed_file = open(bed_path, "r")
     
     # loop over the VCF file variants 
@@ -378,7 +379,8 @@ def step_4(outdir, vadir):
     
     # Pass temp variable as the stdin
     # Use bedtools subtract to remove variations found in rmsk.bed file 
-    cmd = "bedtools subtract -a stdin -b {}/tools/SNPiR/genome_ref/hg19_rmsk.bed | cut -f1,3-7 > {}".format(vadir, step4_output_path)
+    # cmd = "bedtools subtract -a stdin -b {}/tools/SNPiR/genome_ref/hg19_rmsk.bed | cut -f1,3-7 > {}".format(vadir, step4_output_path)
+    cmd = "bedtools subtract -a stdin -b {}/hg19_rmsk.bed | cut -f1,3-7 > {}".format(reference_dir, step4_output_path)
     print(cmd)
     subprocess.Popen(cmd, stdin=subprocess.PIPE, encoding='utf8', shell=True).communicate(temp)
 
@@ -440,13 +442,13 @@ def intron_splice_region(variant_pos, variant_genes, splice_dist):
                     return(True)
     return(False)
 
-def step_5(outdir, vadir):
+def step_5(outdir, reference_dir):
     ###################################################################
     # Filtering intronic candidates within 4 bp of splicing junctions
     # 
     ###################################################################
 
-    logging.info("\n STEP 5: \n Filtering intronic candidates within 4 bp of splicing junctions " + timeStamp() + " \n")
+    logging.info("\n STEP 5: \n\t Filtering intronic candidates within 4 bp of splicing junctions: " + timeStamp() + " \n")
 
     ###############
     # Constants 
@@ -455,7 +457,8 @@ def step_5(outdir, vadir):
     # set file paths 
     step5_outfile = "{}/step5.txt".format(outdir)
     step5_infile = "{}/step4.txt".format(outdir)
-    genefile_path = "{}/tools/SNPiR/revised/gene_annotation_table".format(vadir)
+    # genefile_path = "{}/tools/SNPiR/revised/gene_annotation_table".format(vadir)
+    genefile_path = "{}/gene_annotation_table".format(reference_dir)
 
     # Open Files Read and Write
     infile = open(step5_infile, 'r')
@@ -516,9 +519,9 @@ def step_5(outdir, vadir):
 ############################################################
       ##############################################
 
-def step_6(outdir, vadir, refgenome_path):
+def step_6(outdir, refgenome_path):
 
-    logging.info("\n STEP 6: \n Filtering candidates in homopolymer runs " + timeStamp() + " \n")
+    logging.info("\n STEP 6: \n\t Filtering candidates in homopolymer runs: " + timeStamp() + " \n")
 
     ###############
     # Constants 
@@ -549,8 +552,10 @@ def step_6(outdir, vadir, refgenome_path):
     temp_bed_path = "{}/tmp.bed".format(outdir)
     temp_bed = open(temp_bed_path, "w")
 
-    fastaFromBed = "{}/tools/bedtools-2.25.0/fastaFromBed".format(vadir)
-    cmd = "{} -fi {} -bed stdin -fo stdout".format(fastaFromBed, refgenome_path)
+    # fastaFromBed = "{}/tools/bedtools-2.25.0/fastaFromBed".format(vadir)
+    # cmd = "{} -fi {} -bed stdin -fo stdout".format(fastaFromBed, refgenome_path)
+
+    cmd = "fastaFromBed -fi {} -bed stdin -fo stdout".format(refgenome_path)
 
     #-----------------------------------------------------------------------------  
     # 1) Read in the input file (output from step 5) and run through each line 
@@ -624,9 +629,9 @@ def step_6(outdir, vadir, refgenome_path):
       ##############################################
 
 
-def step_7(outdir, vadir, threads, bamFile, refgenome_path):
+def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
 
-    logging.info("\n SNPiR - STEP 7: Running BLAT for realignment to remap reads containing variants. " + timeStamp() + " \n")
+    logging.info("\n SNPiR - STEP 7: \n\t Running BLAT for realignment to remap reads containing variants: " + timeStamp() + " \n")
 
 
     ##############
@@ -648,7 +653,7 @@ def step_7(outdir, vadir, threads, bamFile, refgenome_path):
     psl_file_path = "{}.psl".format(step7_outfile_path)
     TEMP = step7_outfile_path + '_tmp'
 
-    pblat_path = '{}/tools/pblat'.format(vadir)
+    # pblat_path = '{}/tools/pblat'.format(vadir)
 
     step_7_infile = open(step7_infile_path, "r")
     fa_file = open(fa_file_path, "w")
@@ -873,12 +878,12 @@ def step_7(outdir, vadir, threads, bamFile, refgenome_path):
 
 
 
-def step_8(outdir, vadir):
+def step_8(outdir, reference_dir):
     #---------------------------------
     # STEP 3.8
     # Bedtools Subtract
     #---------------------------------
-    logging.info("\n STEP 8: \n Filtering out currently known RNA-editing sites using BEDtools subtract. " + timeStamp() + " \n")
+    logging.info("\n STEP 8: \n\t Filtering out currently known RNA-editing sites using BEDtools subtract. " + timeStamp() + " \n")
 
     #--------------------
     # Comstants 
@@ -907,19 +912,18 @@ def step_8(outdir, vadir):
     #--------------------
     cmd = "bedtools subtract \
         -a stdin \
-        -b {}/tools/SNPiR/genome_ref/Human_AG_all_hg19.bed > {}".format(vadir, outfile)
+        -b {}/Human_AG_all_hg19.bed > {}".format(reference_dir, outfile)
     print(cmd)
     subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8', shell=True).communicate(str_infile)
 
 
 
-def step_9(outdir, vadir, input_file):
+def step_9(outdir, input_file):
     #---------------------------------
     # STEP 3.9
     # Bedtools intersect
     #---------------------------------
-    bedtools = "{}/tools/bedtools-2.25.0".format(vadir)
-    logging.info("\n STEP 9: \n Bedtools intersect " + timeStamp() + " \n")
+    logging.info("\n STEP 9: \n\t Bedtools intersect " + timeStamp() + " \n")
     
 
     cmd = "bedtools intersect \
@@ -956,14 +960,18 @@ def make_menu():
                            required = True, help = "The input VCF file to run SNPiR on.")
     required.add_argument( "-B", metavar = "Input_BAM_File", dest = "str_BAM_file",
                            required = True, help = "The input BAM file.")
-    required.add_argument( "-V", metavar = "VaDiR_ Directory", dest = "str_VaDiR_path",
-                           required = True, help = "The path to the VaDiR directory.")
     required.add_argument( "-R", metavar = "Reference Genome", dest = "refgenome_path",
                            required = True, help = "The path to the needed reference genome.")
     
     required.add_argument( "-O", metavar = "Output_Directory", dest = "str_out_dir",
                            required = False, help = "Where to put the results from SNPiR.",
                            default = ".")
+    
+    required.add_argument( "--reference_dir", dest = "reference_dir",
+                           required = True, help = "Reference directory.")
+
+    required.add_argument( "--pblat_path", dest = "pblat_path",
+                           required = False, help = "Path to pblat.")
 
     required.add_argument( "--keep_indels", action="store_true", dest = "keep_indels",
                            required = False, help = "If indels should be removed or not. (default = True)")
@@ -997,11 +1005,13 @@ if __name__ == "__main__":
     quality_filter = 20
     infile = args_parsed.str_input_file
     outdir = args_parsed.str_out_dir
-    vadir = args_parsed.str_VaDiR_path
     refined_bam = args_parsed.str_BAM_file
     refgenome_path = args_parsed.refgenome_path
     threads_num = args_parsed.i_number_threads
     keep_indels = args_parsed.keep_indels
+
+    reference_dir = args_parsed.reference_dir
+    pblat_path = args_parsed.pblat_path
 
     # Get the output directory and create it if it does not exist
     if not os.path.exists(outdir):
@@ -1014,19 +1024,27 @@ if __name__ == "__main__":
     # if not os.path.exists(checkpoints_dir):
     #     os.makedirs(checkpoints_dir)
 
-    
+    logging.info("\n ################# Running SNPiR-Python ################# ")
+
+    logging.info("Running the analysis on the following: \n \t\t\t\t {}".format(infile))
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Start running the steps 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Remove or Keep INDELS
     if keep_indels == False:
+        logging.info("Removing INDELS")
         filterindels(outdir, infile, refgenome_path)
         step2_infile = "{}/snp_only.vcf".format(outdir)
     else:
+        logging.info("Keeping INDELS")
         step2_infile = infile
 
     step_2(outdir, quality_filter, step2_infile)
-    step_3(outdir, vadir, refined_bam)
-    step_4(outdir, vadir)
-    step_5(outdir, vadir)
-    step_6(outdir, vadir, refgenome_path)
-    step_7(outdir, vadir, threads=threads_num, bamFile = refined_bam, refgenome_path = refgenome_path)
-    step_8(outdir, vadir)
-    step_9(outdir, vadir, input_file = step2_infile)
+    step_3(outdir, refined_bam)
+    step_4(outdir, reference_dir) #vadir)
+    step_5(outdir, reference_dir)
+    step_6(outdir, refgenome_path)
+    step_7(outdir, pblat_path, threads=threads_num, bamFile = refined_bam, refgenome_path = refgenome_path)
+    step_8(outdir, reference_dir)
+    step_9(outdir, input_file = step2_infile)
