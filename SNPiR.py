@@ -1043,10 +1043,10 @@ if __name__ == "__main__":
         logging.info("Keeping INDELS")
         step2_infile = infile
 
-    # step_2(outdir, quality_filter, step2_infile)
-    # step_3(outdir, refined_bam)
-    # step_4(outdir, reference_dir) #vadir)
-    # step_5(outdir, reference_dir)
+    step_2(outdir, quality_filter, step2_infile)
+    step_3(outdir, refined_bam)
+    step_4(outdir, reference_dir) #vadir)
+    step_5(outdir, reference_dir)
     step_6(outdir, refgenome_path)
     step_7(outdir, pblat_path, threads=threads_num, bamFile = refined_bam, refgenome_path = refgenome_path)
     step_8(outdir, reference_dir)
