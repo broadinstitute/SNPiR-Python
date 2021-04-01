@@ -556,7 +556,7 @@ def step_6(outdir, refgenome_path):
     temp_bed = open(temp_bed_path, "w")
 
 
-    # cmd = "fastaFromBed -fi {} -bed stdin -fo stdout".format(refgenome_path)
+    cmd = "fastaFromBed -fi {} -bed stdin -fo stdout".format(refgenome_path)
 
     #-----------------------------------------------------------------------------  
     # 1) Read in the input file (output from step 5) and run through each line 
