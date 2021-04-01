@@ -530,10 +530,13 @@ def step_6(outdir, refgenome_path):
     infile_path = "{}/step5.txt".format(outdir)
     outfile_path = "{}/step6.txt".format(outdir)
     # refgenome_path = "{}/refs/ucsc.hg19.fasta".format(vadir)
+    print("Infile: ",infile_path)
+    print("Output: ",outfile_path)
+    print("Reference File: ", refgenome_path)
 
     # distance from splice region
-    splice_dist = 4
-    infile_list = []
+    # splice_dist = 4
+    # infile_list = []
 
     # BED file constants 
     left_buffer, right_buffer = 4, 4
@@ -552,8 +555,6 @@ def step_6(outdir, refgenome_path):
     temp_bed_path = "{}/tmp.bed".format(outdir)
     temp_bed = open(temp_bed_path, "w")
 
-    # fastaFromBed = "{}/tools/bedtools-2.25.0/fastaFromBed".format(vadir)
-    # cmd = "{} -fi {} -bed stdin -fo stdout".format(fastaFromBed, refgenome_path)
 
     cmd = "fastaFromBed -fi {} -bed stdin -fo stdout".format(refgenome_path)
 
@@ -566,6 +567,7 @@ def step_6(outdir, refgenome_path):
     #------------------------
     # 1) Create the bed file
     #------------------------
+    # outfile_testing = open(outfile_path + "_test.txt", 'w')
     for i in infile.readlines():
         #------------------------
         # 2) Create the bed file
@@ -594,11 +596,15 @@ def step_6(outdir, refgenome_path):
             # iterate of the sequence 
             #   check if the 4 consecutive nucleotides are the edited nucleotide 
             #   if true will set th variable homopolymer to TRUE
-        for k in range(len(sequence)-4):
+        sequence_tmp = edit_base_nuc + " : " + sequence + "\n"
+        # outfile_testing.write(sequence_tmp)
+        
+        for k in [0,1,2,3,5]: #range(len(sequence)-3):
             if edit_base_nuc == sequence[k] and edit_base_nuc == sequence[k+1] and edit_base_nuc == sequence[k+2] and edit_base_nuc == sequence[k+3]:
                 homopolymer = True
-            else:
-                homopolymer = False
+                # break
+            # else:
+            #     homopolymer = False
 
         #-----------------
         # Write to a file 
@@ -608,7 +614,7 @@ def step_6(outdir, refgenome_path):
             outfile.write(i)
         else:
             failed+=1
-            outfile_failed.write(i)
+            outfile_failed.write(i.split("\n")[0] + "\t" + sequence_tmp)
 
             
 
@@ -647,13 +653,10 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
     step7_infile_path = "{}/step6.txt".format(outdir)
     step7_outfile_path = "{}/step7.txt".format(outdir)
     outfile_failed_path = "{}/step7_excluded.txt".format(outdir)
-    # refgenome_path = "{}/refs/ucsc.hg19.fasta".format(vadir)
 
     fa_file_path = "{}.fa".format(step7_outfile_path)
     psl_file_path = "{}.psl".format(step7_outfile_path)
     TEMP = step7_outfile_path + '_tmp'
-
-    # pblat_path = '{}/tools/pblat'.format(vadir)
 
     step_7_infile = open(step7_infile_path, "r")
     fa_file = open(fa_file_path, "w")
