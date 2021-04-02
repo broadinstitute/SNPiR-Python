@@ -9,7 +9,7 @@ To help speed up the analysis, PBLAT is used in substitution of BLAT. PBLAT is a
 
 <p align="justify">
 The original SNPiR method utilizes GATK3’s UnifiedGenotyper to identify variants in RNA-seq data. UnifiedGenotyper is now deprecated in favor of the updated GATK4 HaplotypeCaller method for variant identification. Currently SNPiR-Python does not run HaplotypeCaller, but instead takes a VCF file as input, allowing the user freedom to run their own HaplotypeCaller with the GATK best practice or SNPiR recommended parameters. 
-The original SNPiR was written in Perl while this reimplementation is written in Python. Perl is becoming less popular as each day passes, giving rise to the widely used Python language. It is subjective wether python is truly better than Perl, but it is more advantageous to utilize the more popular and widely used language Python. 
+The original SNPiR was written in Perl while this reimplementation is written in Python. Perl is becoming less popular as each day passes, giving rise to the widely used Python language. It is subjective whether python is truly better than Perl, but it is more advantageous to utilize the more popular and widely used language Python. 
 </p>
 
 <p align="justify">
