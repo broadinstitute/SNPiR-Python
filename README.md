@@ -1,9 +1,7 @@
 # SNPiR-Python
 <p align="justify">
-<strong> SNPiR-Python</strong> is a Python implementation of the original SNPiR code. SNPiR identifies Genomic Variants (SNPs) in RNA-seq data with high accuracy using several hard filtering methods. 
+<strong> SNPiR-Python</strong> is a Python implementation of the original SNPiR code. SNPiR identifies Genomic Variants (SNPs) in RNA-seq data with high accuracy using several hard filtering methods. The rationale behind reimplementing SNPiR into python is due to speed and modernization. 
 </p>
-
-The rationale behind reimplementing SNPiR into python is due to speed and modernization. 
 
 <p align="justify">
 To help speed up the analysis, PBLAT is used in substitution of BLAT. PBLAT is aparalalized method of BLAT, allowing it to run on multiple cpu threads. 
