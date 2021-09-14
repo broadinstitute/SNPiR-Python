@@ -24,6 +24,8 @@ selected_variants = data %>% filter(QUAL >= 20 &
 
 data = data %>% mutate(boosted = IND %in% selected_variants)
 
+data = data %>% rename('chr:pos' = IND)
+
 write.table(data, file=output_matrix_filename, quote=F, row.names=F, sep="\t")
 
 quit(save = "no", status = 0, runLast = FALSE)

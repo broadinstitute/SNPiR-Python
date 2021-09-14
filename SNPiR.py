@@ -61,6 +61,13 @@ def main():
 
     pipeliner.add_commands([Command(cmd, "snpir_selected_matrix.ok")])
 
+
+    cmd = " ".join([ os.path.join(CTAT_UTILDIR, "extract_boosted_vcf.py"),
+                    "--vcf_in", args.input_vcf,
+                    "--boosted_variants_matrix", snpir_selected_matrix_file,
+                    "--vcf_out", args.output_filename])
+
+    pipeliner.add_commands([Command(cmd, "snpir_filt_vcf.ok")])
     
     pipeliner.run()
 
