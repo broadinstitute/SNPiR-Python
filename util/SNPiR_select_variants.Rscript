@@ -1,0 +1,30 @@
+#!/usr/bin/env Rscript
+
+suppressPackageStartupMessages(library("argparse"))
+suppressPackageStartupMessages(library("tidyverse"))
+
+parser = ArgumentParser()
+parser$add_argument("--input_matrix", help="input feature matrix file", required=TRUE, nargs=1)
+parser$add_argument("--output_matrix", help="output feature matrix file", required=TRUE, nargs=1)
+args = parser$parse_args()
+
+input_matrix_filename = args$input_matrix
+output_matrix_filename = args$output_matrix
+
+
+data = read.table(input_matrix_filename, header=T, stringsAsFactors = F, sep="\t")
+
+selected_variants = data %>% filter(QUAL >= 20 &
+                                  TPR > 0 &
+                                  RPT == 0 &
+                                  DJ > 4 &
+                                  Homopolymer < 5 &
+                                  ED < 2) %>%
+                            pull(IND)
+
+data = data %>% mutate(boosted = IND %in% selected_variants)
+
+write.table(data, file=output_matrix_filename, quote=F, row.names=F, sep="\t")
+
+quit(save = "no", status = 0, runLast = FALSE)
+
