@@ -14,7 +14,7 @@ output_matrix_filename = args$output_matrix
 
 data = read.table(input_matrix_filename, header=T, stringsAsFactors = F, sep="\t")
 
-selected_variants = data %>% filter(QUAL >= 20 &
+selected_variants = data %>% filter(QUAL > 20 &
                                   TPR > 0 &
                                   RPT == 0 &
                                   DJ > 4 &
