@@ -74,8 +74,8 @@ def filterindels(outdir, infile, refgenome_path):
                                     "-O", output_file])
 
     print("Running: \n", filter_cmd)
-    subprocess.Popen(filter_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8', shell=True).communicate()
-
+    subprocess.check_call(filter_cmd, shell=True)
+    
 
       ##############################################
 ############################################################
@@ -189,8 +189,8 @@ def step3_processing(i, bamFile, TEMP):
     bamposition = chrom + ':' + position + '-' + position
 
     cmd = "samtools view {} {} > {}".format(bamFile, bamposition, TEMP)
-    subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8', shell=True).communicate()
-
+    subprocess.check_call(cmd, shell=True)
+    
     editnuc = line[4]
     newmismatch = 0
     mismatchreadcount = 0
@@ -391,8 +391,8 @@ def step_4(outdir, reference_dir):
     # cmd = "bedtools subtract -a stdin -b {}/tools/SNPiR/genome_ref/hg19_rmsk.bed | cut -f1,3-7 > {}".format(vadir, step4_output_path)
     cmd = "bedtools subtract -a stdin -b {}/hg19_rmsk.bed | cut -f1,3-7 > {}".format(reference_dir, step4_output_path)
     print(cmd)
-    subprocess.Popen(cmd, stdin=subprocess.PIPE, encoding='utf8', shell=True).communicate(temp)
-
+    subprocess.check_call(cmd, shell=True)
+    
 
     # Close the files 
     vcf_file.close()
@@ -653,7 +653,7 @@ def step_6(outdir, refgenome_path):
       ##############################################
 
 
-def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
+def step_7(outdir, threads, bamFile, refgenome_path):
 
     logging.info("\n SNPiR - STEP 7: \n\t Running BLAT for realignment to remap reads containing variants: " + timeStamp() + " \n")
 
@@ -706,7 +706,7 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
         bamposition = chrom + ':' + position+'-'+position
 
         cmd = "samtools view {} {} > {}".format(bamFile, bamposition, TEMP)
-        subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8', shell=True).communicate()
+        subprocess.check_call(cmd, shell=True)
 
         editnuc = line[4]
         newmismatch = 0
@@ -772,16 +772,15 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
     logging.info(message)
 
     # Path to blat/pblat
-    pblat = "{}/pblat".format(pblat_path)
-    cmd_pblat = "{} \
+    cmd_pblat = "pblat \
                  -threads={} \
                  -stepSize=5 \
                  -repMatch=2253 \
                  -minScore=20 \
                  -minIdentity=0 \
-                 -noHead {} {} {}".format(pblat, threads, refgenome_path, fa_file_path, psl_file_path)
+                 -noHead {} {} {}".format(threads, refgenome_path, fa_file_path, psl_file_path)
     print(cmd_pblat)
-    subprocess.Popen(cmd_pblat, shell=True).communicate()
+    subprocess.check_call(cmd_pblat, shell=True)
 
     #----------------------------------------
     # Process the PBLAT output
@@ -959,8 +958,8 @@ def step_9(outdir, input_file):
         -header \
         > {}/step9.snpir.filtered.vcf".format(input_file, outdir, outdir)
     print(cmd)
-    subprocess.Popen(cmd, shell=True).communicate()
-
+    subprocess.check_call(cmd, shell=True)
+    
 
     step9_chkpt = os.path.join(outdir, "step9.ok")
     subprocess.check_call("touch {}".format(step9_chkpt), shell=True)
@@ -1002,9 +1001,6 @@ def make_menu():
     required.add_argument( "--reference_dir", dest = "reference_dir",
                            required = True, help = "Reference directory.")
 
-    required.add_argument( "--pblat_path", dest = "pblat_path",
-                           required = False, help = "Path to pblat.")
-
     required.add_argument( "--keep_indels", action="store_true", dest = "keep_indels",
                            required = False, help = "If indels should be removed or not. (default = True)")
     #---------------------
@@ -1043,7 +1039,6 @@ if __name__ == "__main__":
     keep_indels = args_parsed.keep_indels
 
     reference_dir = args_parsed.reference_dir
-    pblat_path = args_parsed.pblat_path
 
     # Get the output directory and create it if it does not exist
     if not os.path.exists(outdir):
@@ -1089,7 +1084,7 @@ if __name__ == "__main__":
         step_6(outdir, refgenome_path)
 
     if not os.path.exists(os.path.join(outdir, "step7.ok")):
-        step_7(outdir, pblat_path, threads=threads_num, bamFile = refined_bam, refgenome_path = refgenome_path)
+        step_7(outdir, threads=threads_num, bamFile = refined_bam, refgenome_path = refgenome_path)
 
     if not os.path.exists(os.path.join(outdir, "step8.ok")):
         step_8(outdir, reference_dir)
