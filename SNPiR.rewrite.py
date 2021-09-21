@@ -13,6 +13,7 @@ import glob
 import urllib.request
 import logging
 import subprocess
+import gzip
 import multiprocessing as mp
 logging.basicConfig(format='\n %(levelname)s : %(message)s', level=logging.DEBUG)
 
@@ -30,7 +31,10 @@ def timeStamp():
 def readVCF(infile, STR_VCF_DELIMITER, CHR_COMMENT):
     vcf_header = []
     vcf_body = []
-    vcf_file = open(infile, "r").readlines()
+    if re.search(".gz$", infile):
+        vcf_file = gzip.open(infile, "rt", encoding='utf-8').readlines()
+    else:
+        vcf_file = open(infile, "r", encoding='utf-8').readlines()
 
     for line in vcf_file:
         ## Header 
@@ -114,8 +118,8 @@ def step_2(outdir, quality_filter, step2_infile):
     head, body = readVCF(infile, VCF_DELIMITER, CHR_COMMENT)
 
     # open the output file 
-    outputFile = open(outputFile_path, "w")
-    outputFailed = open(outputFailed_path, "w")
+    outputFile = open(outputFile_path, "w", encoding='utf-8')
+    outputFailed = open(outputFailed_path, "w", encoding='utf-8')
     for i in range(len(body)):
         line = body[i].split("\t")
         # Filter if not in chromosome 
@@ -165,6 +169,9 @@ def step_2(outdir, quality_filter, step2_infile):
     print("Variants Passed step2:", passed)
     print("Variants filtered step2:", failed)
 
+    step2_chkpt = os.path.join(outdir, "step2.ok")
+    subprocess.check_call("touch {}".format(step2_chkpt), shell=True)
+
       ##############################################
 ############################################################
 ########################## Step 3 ##########################
@@ -188,7 +195,7 @@ def step3_processing(i, bamFile, TEMP):
     newmismatch = 0
     mismatchreadcount = 0
     newcov, newmismatch = 0, 0 
-    f = open(TEMP,"r")
+    f = open(TEMP,"r", encoding='utf-8')
     basequalFail=0
     readPosFail=0
     output =""
@@ -313,9 +320,9 @@ def step_3(outdir, bamFile):
     TEMP = step3_outfile + '_tmp'
 
     # Open input and output Files 
-    infile = open(step3_file, "r")
-    outfile = open(step3_outfile , "w")
-    outfile_failed = open (outfile_failed, "w")
+    infile = open(step3_file, "r", encoding='utf-8')
+    outfile = open(step3_outfile , "w", encoding='utf-8')
+    outfile_failed = open (outfile_failed, "w", encoding='utf-8')
 
     # counters 
     not_filtered, removed= 0, 0
@@ -332,6 +339,8 @@ def step_3(outdir, bamFile):
         not_filtered+=int(i[3])
     pool.close()    
 
+    step3_chkpt = os.path.join(outdir, "step3.ok")
+    subprocess.check_call("touch {}".format(step3_chkpt), shell=True)
 
       ##############################################
 ############################################################
@@ -362,11 +371,11 @@ def step_4(outdir, reference_dir):
     ################
     step4_output_path = "{}/step4.txt".format(outdir)
     step4_infile = "{}/step3.txt".format(outdir)
-    vcf_file = open(step4_infile, "r")
+    vcf_file = open(step4_infile, "r", encoding='utf-8')
     # repeat masker bed file 
     # bed_path = '{}/tools/SNPiR/genome_ref/hg19_rmsk.bed'.format(vadir)
     bed_path = '{}/hg19_rmsk.bed'.format(reference_dir)
-    bed_file = open(bed_path, "r")
+    bed_file = open(bed_path, "r", encoding='utf-8')
     
     # loop over the VCF file variants 
     # add Start location
@@ -461,10 +470,10 @@ def step_5(outdir, reference_dir):
     genefile_path = "{}/gene_annotation_table".format(reference_dir)
 
     # Open Files Read and Write
-    infile = open(step5_infile, 'r')
-    genefile = open(genefile_path, 'r')
-    outfile = open(step5_outfile, 'w')
-    outfile_failed = open(step5_outfile + "_excluded.txt", 'w')
+    infile = open(step5_infile, 'r', encoding='utf-8')
+    genefile = open(genefile_path, 'r', encoding='utf-8')
+    outfile = open(step5_outfile, 'w', encoding='utf-8')
+    outfile_failed = open(step5_outfile + "_excluded.txt", 'w', encoding='utf-8')
 
     splice_dist = 4
     infile_list=[]
@@ -546,14 +555,14 @@ def step_6(outdir, refgenome_path):
     #----------------------
     # Open Files 
     #----------------------
-    infile = open(infile_path, 'r')
-    refgenome = open(refgenome_path, 'r')
-    outfile = open(outfile_path, 'w')
-    outfile_failed = open(outfile_path + "_excluded.txt", 'w')
+    infile = open(infile_path, 'r', encoding='utf-8')
+    refgenome = open(refgenome_path, 'r', encoding='utf-8')
+    outfile = open(outfile_path, 'w', encoding='utf-8')
+    outfile_failed = open(outfile_path + "_excluded.txt", 'w', encoding='utf-8')
 
     temp = ""
     temp_bed_path = "{}/tmp.bed".format(outdir)
-    temp_bed = open(temp_bed_path, "w")
+    temp_bed = open(temp_bed_path, "w", encoding='utf-8')
 
 
     cmd = "fastaFromBed -fi {} -bed stdin -fo stdout".format(refgenome_path)
@@ -658,8 +667,8 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
     psl_file_path = "{}.psl".format(step7_outfile_path)
     TEMP = step7_outfile_path + '_tmp'
 
-    step_7_infile = open(step7_infile_path, "r")
-    fa_file = open(fa_file_path, "w")
+    step_7_infile = open(step7_infile_path, "r", encoding='utf-8')
+    fa_file = open(fa_file_path, "w", encoding='utf-8')
 
 
     # counters to see how many variants pass and fail 
@@ -695,7 +704,7 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
         mismatchreadcount = 0
         newcov, newmismatch = 0, 0 
 
-        f = open(TEMP,"r")
+        f = open(TEMP,"r", encoding='utf-8')
 
         #----------------------------------------
         # read through the input file 
@@ -773,7 +782,7 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
 
     # separate the file 
     psl_dict = {}
-    psl = open(psl_file_path, "r")
+    psl = open(psl_file_path, "r", encoding='utf-8')
     for i in psl.readlines():
         line = i.strip().split("\t")
         name = line[9]
@@ -840,8 +849,8 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
                 filter_dict[psl_id] = 1
 
     
-    step7_outfile = open(step7_outfile_path, "w")
-    step7_failed = open(outfile_failed_path, "w")
+    step7_outfile = open(step7_outfile_path, "w", encoding='utf-8')
+    step7_failed = open(outfile_failed_path, "w", encoding='utf-8')
 
     for i in infile:
         line = i.strip().split("\t")
@@ -898,7 +907,7 @@ def step_8(outdir, reference_dir):
     #--------------------
     # read in the file 
     #--------------------
-    inputFile = open(infile, "r")
+    inputFile = open(infile, "r", encoding='utf-8')
 
     # edit the bed file to have start and stop positions, also round the last value to third decimal 
     # pass the file as a variable to stdin 
@@ -1043,8 +1052,13 @@ if __name__ == "__main__":
         logging.info("Keeping INDELS")
         step2_infile = infile
 
-    step_2(outdir, quality_filter, step2_infile)
-    step_3(outdir, refined_bam)
+    if not os.path.exists(os.path.join(outdir, "step2.ok")):
+        step_2(outdir, quality_filter, step2_infile)
+
+
+    if not os.path.exists(os.path.join(outdir, "step3.ok")):
+        step_3(outdir, refined_bam)
+        
     step_4(outdir, reference_dir) #vadir)
     step_5(outdir, reference_dir)
     step_6(outdir, refgenome_path)
