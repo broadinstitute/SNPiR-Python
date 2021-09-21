@@ -398,6 +398,9 @@ def step_4(outdir, reference_dir):
     vcf_file.close()
     bed_file.close()
 
+    step4_chkpt = os.path.join(outdir, "step4.ok")
+    subprocess.check_call("touch {}".format(step4_chkpt), shell=True)
+
       ##############################################
 ############################################################
 ########################## Step 5 ##########################
@@ -490,7 +493,7 @@ def step_5(outdir, reference_dir):
     dic = {}
     # loop over Gene Annotation File
     for i in genefile.readlines():
-        x = i.rstrip('\n').split("\t")
+        x = i.rstrip('\n').split(" ")
         chromosome = x[2]
         if chromosome in dic:
             dic[chromosome].append(x)
@@ -520,6 +523,9 @@ def step_5(outdir, reference_dir):
 
     print("Variants Passed:", passed)
     print("Variants Filtered:", failed)
+
+    step5_chkpt = os.path.join(outdir, "step5.ok")
+    subprocess.check_call("touch {}".format(step5_chkpt), shell=True)
 
 
       ##############################################
@@ -635,6 +641,9 @@ def step_6(outdir, refgenome_path):
 
     print("Variants Passed: ", passed)
     print("Variants Filtered: ", failed)
+
+    step6_chkpt = os.path.join(outdir, "step6.ok")
+    subprocess.check_call("touch {}".format(step6_chkpt), shell=True)
 
 
       ##############################################
@@ -888,6 +897,8 @@ def step_7(outdir, pblat_path, threads, bamFile, refgenome_path):
     print("Variants kept:", passed)
     print("Variants filtered:", failed)
 
+    step7_chkpt = os.path.join(outdir, "step7.ok")
+    subprocess.check_call("touch {}".format(step7_chkpt), shell=True)
 
 
 def step_8(outdir, reference_dir):
@@ -929,6 +940,9 @@ def step_8(outdir, reference_dir):
     subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8', shell=True).communicate(str_infile)
 
 
+    step8_chkpt = os.path.join(outdir, "step8.ok")
+    subprocess.check_call("touch {}".format(step8_chkpt), shell=True)
+
 
 def step_9(outdir, input_file):
     #---------------------------------
@@ -946,6 +960,12 @@ def step_9(outdir, input_file):
         > {}/step9.snpir.filtered.vcf".format(input_file, outdir, outdir)
     print(cmd)
     subprocess.Popen(cmd, shell=True).communicate()
+
+
+    step9_chkpt = os.path.join(outdir, "step9.ok")
+    subprocess.check_call("touch {}".format(step9_chkpt), shell=True)
+
+
 
 ##############################################################################
 ##############################################################################
@@ -1058,10 +1078,25 @@ if __name__ == "__main__":
 
     if not os.path.exists(os.path.join(outdir, "step3.ok")):
         step_3(outdir, refined_bam)
-        
-    step_4(outdir, reference_dir) #vadir)
-    step_5(outdir, reference_dir)
-    step_6(outdir, refgenome_path)
-    step_7(outdir, pblat_path, threads=threads_num, bamFile = refined_bam, refgenome_path = refgenome_path)
-    step_8(outdir, reference_dir)
-    step_9(outdir, input_file = step2_infile)
+
+    if not os.path.exists(os.path.join(outdir, "step4.ok")):
+        step_4(outdir, reference_dir) #vadir)
+
+    if not os.path.exists(os.path.join(outdir, "step5.ok")):
+        step_5(outdir, reference_dir)
+
+    if not os.path.exists(os.path.join(outdir, "step6.ok")):    
+        step_6(outdir, refgenome_path)
+
+    if not os.path.exists(os.path.join(outdir, "step7.ok")):
+        step_7(outdir, pblat_path, threads=threads_num, bamFile = refined_bam, refgenome_path = refgenome_path)
+
+    if not os.path.exists(os.path.join(outdir, "step8.ok")):
+        step_8(outdir, reference_dir)
+
+    if not os.path.exists(os.path.join(outdir, "step9.ok")):
+        step_9(outdir, input_file = step2_infile)
+
+
+    
+    sys.exit(0)
