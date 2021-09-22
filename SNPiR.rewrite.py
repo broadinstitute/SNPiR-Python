@@ -921,24 +921,26 @@ def step_8(outdir, reference_dir):
 
     # edit the bed file to have start and stop positions, also round the last value to third decimal 
     # pass the file as a variable to stdin 
+
+    
     if infile:
-        for line in inputFile.readlines(): 
-            line = line.strip().split("\t")
-            start = int(line[1])-1
-            line.insert(1, str(start))
-            line[-1] = str(format(round(float(line[-1]),3),'.3f'))
-            str_infile+="\t".join(line)+"\n"
+        with open(TMP, "w", encoding='utf-8') as ofh:
+            for line in inputFile.readlines(): 
+                line = line.strip().split("\t")
+                start = int(line[1])-1
+                line.insert(1, str(start))
+                line[-1] = str(format(round(float(line[-1]),3),'.3f'))
+                print("\t".join(line), file=ofh)
 
     #--------------------
     # Run command 
     #--------------------
     cmd = "bedtools subtract \
-        -a stdin \
-        -b {}/Human_AG_all_hg19.bed > {}".format(reference_dir, outfile)
+        -a {} \
+        -b {}/Human_AG_all_hg19.bed > {}".format(TMP, reference_dir, outfile)
     print(cmd)
-    subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8', shell=True).communicate(str_infile)
-
-
+    subprocess.check_call(cmd, shell=True)
+    
     step8_chkpt = os.path.join(outdir, "step8.ok")
     subprocess.check_call("touch {}".format(step8_chkpt), shell=True)
 
