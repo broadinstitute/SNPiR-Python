@@ -364,7 +364,7 @@ def step_4(outdir, reference_dir):
     ## Store the vcf in list 
     new_vcf = []
     # String to write lines to 
-    temp=""
+    tempfile="step4.tmp.txt"
 
     ################
     # Read in files 
@@ -376,20 +376,21 @@ def step_4(outdir, reference_dir):
     # bed_path = '{}/tools/SNPiR/genome_ref/hg19_rmsk.bed'.format(vadir)
     bed_path = '{}/hg19_rmsk.bed'.format(reference_dir)
     bed_file = open(bed_path, "r", encoding='utf-8')
-    
-    # loop over the VCF file variants 
-    # add Start location
-    for i in vcf_file.readlines():
-        line = i.split("\t")
-        start_location = int(line[1])-1
-        line.insert(1, str(start_location))
-        new_vcf.append("\t".join(line))
-    temp = "".join(new_vcf)
+
+    with open(tempfile, "wt") as ofh:
+        # loop over the VCF file variants 
+        # add Start location
+        for i in vcf_file.readlines():
+            line = i.split("\t")
+            start_location = int(line[1])-1
+            line.insert(1, str(start_location))
+            print("\t".join(line), file=ofh, end='')
+
     
     # Pass temp variable as the stdin
     # Use bedtools subtract to remove variations found in rmsk.bed file 
     # cmd = "bedtools subtract -a stdin -b {}/tools/SNPiR/genome_ref/hg19_rmsk.bed | cut -f1,3-7 > {}".format(vadir, step4_output_path)
-    cmd = "bedtools subtract -a stdin -b {}/hg19_rmsk.bed | cut -f1,3-7 > {}".format(reference_dir, step4_output_path)
+    cmd = "bedtools subtract -a {} -b {}/hg19_rmsk.bed | cut -f1,3-7 > {}".format(tempfile, reference_dir, step4_output_path)
     print(cmd)
     subprocess.check_call(cmd, shell=True)
     
